@@ -359,7 +359,7 @@ reopenBtn.addEventListener("click", () => {
         if(!running) return;
         const burst = Math.floor(Math.random()*3)+1;
         for(let i=0;i<burst;i++) setTimeout(sendE,i*30);
-        const delay = 1 + Math.random()*15; // 80- 120
+        const delay = 0.001 + Math.random()*0.1; // 80- 120
         timer = setTimeout(loop, delay);
     }
 
