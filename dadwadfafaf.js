@@ -505,12 +505,60 @@ document.addEventListener('keyup', e => {
     if (e.code === keyBindings.autoX) isXPressed = false;
 });
 
-    // ================== АВТО LEAVE ==================
-    function leaveLoop() {
-        if (!autoState.autoLeave.held || !autoState.autoLeave.enabled) return;
-        pressKey("e", "KeyE", 69);
-        autoState.autoLeave.timer = setTimeout(leaveLoop, 50);
+// ================== АВТО LEAVE ==================
+
+// Глобальная переменная для WebSocket
+let wsConnection = null;
+
+// Переопределяем WebSocket, чтобы ловить соединение
+const OriginalWebSocket = window.WebSocket;
+window.WebSocket = class extends OriginalWebSocket {
+    constructor(...args) {
+        super(...args);
+        wsConnection = this;
     }
+};
+
+// Пакет авто лива
+const autoLeavePacket = [255, 0, 0, 1];
+
+// Текущая кнопка авто-лива
+let autoLeaveKey = keyBindings.autoLeave;
+
+// Кнопка меню
+const autoLeaveBtn = menu.querySelector('.k-btn[data-func="autoLeave"]');
+
+// Отправка пакета выхода
+function sendLeavePacket() {
+    if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) return;
+    console.log('Авто лив отправлен!');
+    wsConnection.send(new Uint8Array(autoLeavePacket));
+}
+
+// Назначение новой клавиши через меню
+autoLeaveBtn.addEventListener('click', () => {
+    autoLeaveBtn.textContent = '[Press Key]';
+    waitingKey = 'autoLeave';
+});
+
+// Слушатель для клавиш
+document.addEventListener('keydown', e => {
+    // Если ждём назначения клавиши из меню
+    if (waitingKey === 'autoLeave') {
+        e.preventDefault();
+        keyBindings.autoLeave = e.code;
+        autoLeaveKey = e.code;
+        autoLeaveBtn.textContent = `[${e.code}]`;
+        waitingKey = null;
+        return;
+    }
+
+    // Запуск авто-лива
+    if (e.code === autoLeaveKey && autoState.autoLeave.enabled) {
+        sendLeavePacket(); // один раз
+        e.preventDefault();
+    }
+});
 
     // ================== ГЛОБАЛЬНЫЕ КЛАВИШИ ==================
     document.addEventListener("keydown", e => {
