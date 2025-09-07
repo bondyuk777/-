@@ -359,7 +359,7 @@ reopenBtn.addEventListener("click", () => {
         if(!running) return;
         const burst = Math.floor(Math.random()*3)+1;
         for(let i=0;i<burst;i++) setTimeout(sendE,i*30);
-        const delay = 0.01 + Math.random()*1; // 80- 120
+        const delay = 0.1 + Math.random()*5; // 80- 120
         timer = setTimeout(loop, delay);
     }
 
@@ -406,7 +406,7 @@ reopenBtn.addEventListener("click", () => {
         apply(target, thisArg, args){
             const t = Reflect.apply(target, thisArg, args);
             if(held && autoEToggle.checked){
-                offset += (t-last)*100; // ускорение
+                offset += (t-last)*250; // ускорение 100
             }
             last = t;
             return Math.floor(t + offset);
