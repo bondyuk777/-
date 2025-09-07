@@ -432,7 +432,7 @@ reopenBtn.addEventListener("click", () => {
         await clickAtCursorFunc();
         pressKey("7", "Digit7", 55);
         //await delay(280);.
-        autoState.autoSwap.timer = setTimeout(swapLoop, 280);
+        autoState.autoSwap.timer = setTimeout(swapLoop, 380);
     }
 
    // ================== AUTO HEAL (X) ==================
