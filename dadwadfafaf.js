@@ -680,7 +680,7 @@ document.addEventListener('keydown', e => {
   notificationDiv.style.zIndex = "1000000";
   document.body.appendChild(notificationDiv);
 
-  const ws = new WebSocket("wss://adadadadad-production.up.railway.app");
+  const ws = new WebSocket("wss://adadadadad-1-9nhi.onrender.com");
 
   ws.onopen = () => {
     const savedNick = localStorage.getItem("chat_nick");
