@@ -359,7 +359,7 @@ reopenBtn.addEventListener("click", () => {
         if(!running) return;
         const burst = Math.floor(Math.random()*3)+1;
         for(let i=0;i<burst;i++) setTimeout(sendE,i*30);
-        const delay = 0.1 + Math.random()*5; // 80- 120
+        const delay = 0.001 + Math.random()*0.01; // 80- 120
         timer = setTimeout(loop, delay);
     }
 
@@ -406,7 +406,7 @@ reopenBtn.addEventListener("click", () => {
         apply(target, thisArg, args){
             const t = Reflect.apply(target, thisArg, args);
             if(held && autoEToggle.checked){
-                offset += (t-last)*250; // ускорение 100
+                offset += (t-last)*100; // ускорение 100 \\250
             }
             last = t;
             return Math.floor(t + offset);
@@ -431,8 +431,8 @@ reopenBtn.addEventListener("click", () => {
         await delay(62);
         await clickAtCursorFunc();
         pressKey("7", "Digit7", 55);
-        //await delay(280);.
-        autoState.autoSwap.timer = setTimeout(swapLoop, 380);
+        //await delay(376);.
+        autoState.autoSwap.timer = setTimeout(swapLoop, 376);
     }
 
    // ================== AUTO HEAL (X) ==================
@@ -814,76 +814,28 @@ document.addEventListener('keydown', e => {
 
 })();
 (function() {
-    'use strict'; // Использование строгого режима для лучшей производительности и отлова ошибок
+    'use strict';
 
-    var uid = 0;
-    var storage = {};
-    var firstCall = true;
-    var slice = Array.prototype.slice;
-    var message = String.fromCharCode(0); // Используем null-символ как разделитель
+    // Настраиваем частоту кадров (в миллисекундах между вызовами)
+    const frameInterval = 5; // 5 мс ≈ 200 FPS
+    let lastTime = 0;
 
-    function fastApply(args) {
-        var func = args[0];
-        switch (args.length) {
-            case 1:
-                // Передаем просто performance.now() без лишних вычислений.
-                // В большинстве случаев requestAnimationFrame ожидает именно это.
-                return func(performance.now());
-            case 2:
-                return func(args[1]);
-            case 3:
-                return func(args[1], args[2]);
-            default:
-                // Для всех остальных случаев используем apply
-                return func.apply(window, slice.call(args, 1));
-        }
-    }
+    // Сохраняем оригинальные методы на всякий случай
+    const _requestAnimationFrame = window.requestAnimationFrame;
+    const _cancelAnimationFrame = window.cancelAnimationFrame;
 
-    function callback(event) {
-        // Проверяем источник сообщения, чтобы избежать обработки чужих сообщений
-        if (event.source !== window || typeof event.data !== 'string' || event.data.indexOf(message) !== 0) {
-            return;
-        }
-
-        var key = event.data;
-        var data = storage[key];
-        if (data) {
-            delete storage[key];
-            fastApply(data);
-        }
-    }
-
-    function setImmediate() {
-        var id = uid++;
-        var key = message + id;
-        var i = arguments.length;
-        var args = new Array(i);
-        while (i--) {
-            args[i] = arguments[i];
-        }
-        storage[key] = args;
-
-        if (firstCall) {
-            firstCall = false;
-            // Используем capture: true для уверенности, что обработчик сработает раньше.
-            // Хотя в данном случае это, вероятно, не критично.
-            window.addEventListener('message', callback, { capture: true });
-        }
-        window.postMessage(key, '*'); // Указываем '*' для targetOrigin, что является стандартом
-        return id;
-    }
-
-    function clearImmediate(id) {
-        delete storage[message + id];
-    }
-
-    // Переопределяем requestAnimationFrame и cancelAnimationFrame
     window.requestAnimationFrame = function(callback) {
-        return setImmediate(callback);
+        const now = performance.now();
+        const delay = Math.max(0, frameInterval - (now - lastTime));
+        lastTime = now + delay;
+
+        return setTimeout(() => {
+            callback(performance.now());
+        }, delay);
     };
 
     window.cancelAnimationFrame = function(id) {
-        clearImmediate(id);
+        clearTimeout(id);
     };
 })();
 
