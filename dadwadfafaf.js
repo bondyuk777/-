@@ -459,7 +459,7 @@ async function performXActions() {
         await delay(62);
         await clickAtCursor();
         await pressKey("5", "Digit5", 55);
-        await delay(198);
+        await delay(105); //198
 
         // Проверяем состояние чекбокса каждый цикл
         if (!autoState.autoX.enabled) break;
