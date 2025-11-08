@@ -721,11 +721,258 @@
     const logo = document.querySelector("img.logo");
     if (logo) { logo.src = "https://chohanpohan.com/uploads/posts/2021-12/1640711955_5-chohanpohan-com-p-porno-polnostyu-golie-tyanki-6.jpg"; logo.width = "300"; logo.height = "300"; }
     const bottomTip = document.querySelector(".bottom-tip");
-    if (bottomTip && bottomTip.textContent !== "𝕧𝟚 𝕒𝕖𝕣𝕠 𝕤𝕠𝕗𝕥") bottomTip.textContent = "𝕧𝟚 𝕒𝕖𝕣𝕠 𝕤𝕠𝕗𝕥";
-    if (document.title !== "𝑨𝒆𝒓𝒐𝑺𝒐𝒇𝒕") document.title = "𝑨𝒆𝒓𝒐𝑺𝒐𝒇𝒕";
+    if (bottomTip && bottomTip.textContent !== "𝑹𝒆𝒎𝒂𝒌𝒆 𝒗𝟑") bottomTip.textContent = "𝑹𝒆𝒎𝒂𝒌𝒆 𝒗𝟑";
+    if (document.title !== "𝑻𝒂𝒎𝒊𝑵𝒆𝒈") document.title = "𝑻𝒂𝒎𝒊𝑵𝒆𝒈";
   }
   window.addEventListener("load", changeElements);
   const observer = new MutationObserver(changeElements);
   observer.observe(document.body, { childList: true, subtree: true });
   setInterval(changeElements, 1000);
+})();
+(function () {
+  'use strict';
+
+  const TOGGLE_KEY = "F8";
+  let isOpen = false;
+
+  // Чат
+  const frame = document.createElement("iframe");
+  frame.src = "about:blank";
+  frame.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 450px;
+    height: 350px;
+    border: 2px solid #555;
+    border-radius: 10px;
+    z-index: 999999;
+    display: none;
+    background: #111827;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 10px rgba(0,255,255,0.2);
+  `;
+  document.body.appendChild(frame);
+
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  doc.open();
+  doc.write(`
+<html>
+<head>
+  <style>
+    html, body {
+      margin:0;
+      height:100%;
+      background: #111827;
+      color: #0ff;
+      font-family: sans-serif;
+      display:flex;
+      flex-direction:column;
+    }
+    #msgs {
+      flex:1;
+      overflow-y:auto;
+      padding:5px;
+      font-size:14px;
+      background: #1f2937;
+      border-radius: 10px;
+      margin:5px;
+      border: 2px solid #555;
+      box-shadow: 0 0 10px rgba(0,255,255,0.2), inset 0 2px 5px rgba(0,0,0,0.3);
+    }
+    #inp {
+      width:100%;
+      height:50px;
+      border:0;
+      border-top:2px solid #555;
+      padding:5px;
+      font-size:14px;
+      outline:none;
+      background:#0f172a;
+      color:#0ff;
+      resize:none;
+      font-family: monospace;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 0 10px rgba(0,255,255,0.2), inset 0 2px 5px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="msgs"></div>
+  <textarea id="inp" placeholder="Сообщение... (Enter=отправить)"></textarea>
+</body>
+</html>
+  `);
+  doc.close();
+
+  const msgs = doc.querySelector("#msgs");
+  const inp = doc.querySelector("#inp");
+
+  // Уведомления в правом верхнем углу
+  const notificationDiv = document.createElement("div");
+  notificationDiv.style.position = "fixed";
+  notificationDiv.style.top = "20px";
+  notificationDiv.style.right = "20px";
+  notificationDiv.style.display = "flex";
+  notificationDiv.style.flexDirection = "column";
+  notificationDiv.style.gap = "10px";
+  notificationDiv.style.zIndex = "1000000";
+  document.body.appendChild(notificationDiv);
+
+  const ws = new WebSocket("wss://adadadadad-1-9nhi.onrender.com");
+
+  ws.onopen = () => {
+    const savedNick = localStorage.getItem("chat_nick");
+    const savedPass = localStorage.getItem("chat_pass");
+    if(savedNick && savedPass){
+        setTimeout(()=> {
+            ws.send(`/login ${savedNick} ${savedPass}`);
+        }, 500);
+    }
+  };
+
+  ws.onmessage = (event) => {
+    const msg = event.data;
+
+    if(msg.startsWith("[Система]")) {
+      addSystemMsg(msg); // только в чат
+      return;
+    }
+
+    addPlayerMsg(msg); // чат + уведомления
+  };
+
+  function addSystemMsg(text){
+    const m = doc.createElement("div");
+    m.style.color = "#888"; // серый для системных сообщений
+    m.style.marginBottom = "3px";
+    m.textContent = text;
+    msgs.appendChild(m);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function addPlayerMsg(text){
+    const m = doc.createElement("div");
+    m.style.display = "flex";
+    m.style.alignItems = "center";
+    m.style.marginBottom = "2px";
+
+    const nickPart = text.split(":")[0];
+    const msgPart = text.includes(":") ? text.split(":").slice(1).join(":") : text;
+
+    const avatar = doc.createElement("div");
+    avatar.style.width = "24px";
+    avatar.style.height = "24px";
+    avatar.style.borderRadius = "50%";
+    avatar.style.backgroundColor = stringToColor(nickPart);
+    avatar.style.color = "#0ff";
+    avatar.style.display = "flex";
+    avatar.style.alignItems = "center";
+    avatar.style.justifyContent = "center";
+    avatar.style.fontSize = "14px";
+    avatar.style.fontWeight = "bold";
+    avatar.style.marginRight = "5px";
+    avatar.style.cursor = "pointer";
+    avatar.textContent = nickPart[0].toUpperCase();
+    avatar.onclick = () => ws.send(`/профиль ${nickPart}`);
+
+    const msgText = doc.createElement("span");
+    msgText.style.display = "flex";
+    msgText.style.alignItems = "center";
+    msgText.appendChild(doc.createTextNode(msgPart ? `${nickPart}: ${msgPart}` : text));
+
+    m.appendChild(avatar);
+    m.appendChild(msgText);
+    msgs.appendChild(m);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    // уведомления
+    showNotification(`${nickPart}: ${msgPart}`);
+  }
+
+  function showNotification(text){
+    const n = document.createElement("div");
+    n.textContent = text;
+    n.style.background = "#1f2937";
+    n.style.color = "#0ff";
+    n.style.padding = "8px 12px";
+    n.style.borderRadius = "8px";
+    n.style.border = "2px solid #555";
+    n.style.boxShadow = "0 4px 15px rgba(0,0,0,0.5), 0 0 10px rgba(0,255,255,0.2)";
+    n.style.fontFamily = "monospace";
+    n.style.opacity = "0";
+    n.style.transform = "translateX(50px)";
+    n.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+
+    notificationDiv.appendChild(n);
+
+    requestAnimationFrame(() => {
+      n.style.opacity = "1";
+      n.style.transform = "translateX(0)";
+    });
+
+    setTimeout(()=>{
+      n.style.opacity = "0";
+      n.style.transform = "translateX(50px)";
+      setTimeout(()=>notificationDiv.removeChild(n), 300);
+    }, 3000);
+  }
+
+  function stringToColor(str){
+    let hash = 0;
+    for(let i=0;i<str.length;i++){ hash = str.charCodeAt(i) + ((hash<<5)-hash); }
+    let color = '#';
+    for(let i=0;i<3;i++){
+      const value = (hash >> (i*8)) & 0xFF;
+      color += ('00'+value.toString(16)).substr(-2);
+    }
+    return color;
+  }
+
+  function toggle(force){
+    isOpen = force!==undefined?force:!isOpen;
+    frame.style.display = isOpen?"block":"none";
+    if(isOpen) inp.focus();
+  }
+
+  document.addEventListener("keydown", e=>{
+    if(e.code===TOGGLE_KEY){ e.preventDefault(); toggle(); }
+    if(e.key==="Escape" && isOpen){ toggle(false); }
+  });
+
+  inp.addEventListener("keydown", e=>{
+    if(e.key==="Enter" && !e.shiftKey){
+      e.preventDefault();
+      const text = inp.value.trim();
+      if(text && ws.readyState === WebSocket.OPEN){
+        ws.send(text);
+        inp.value="";
+      }
+    }
+  });
+
+})();
+(function() {
+    'use strict';
+
+    // Настраиваем частоту кадров (в миллисекундах между вызовами)
+    const frameInterval = 5; // 5 мс ≈ 200 FPS
+    let lastTime = 0;
+
+    // Сохраняем оригинальные методы на всякий случай
+    const _requestAnimationFrame = window.requestAnimationFrame;
+    const _cancelAnimationFrame = window.cancelAnimationFrame;
+
+    window.requestAnimationFrame = function(callback) {
+        const now = performance.now();
+        const delay = Math.max(0, frameInterval - (now - lastTime));
+        lastTime = now + delay;
+
+        return setTimeout(() => {
+            callback(performance.now());
+        }, delay);
+    };
+
+    window.cancelAnimationFrame = function(id) {
+        clearTimeout(id);
+    };
 })();
